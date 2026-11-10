@@ -1,0 +1,16 @@
+# A few clips and cheap settings - checks that the whole pipeline runs (a few minutes on CPU/GPU).
+name: smoke
+data:
+  n_clips: 4
+attribution:
+  methods: [saliency, integrated_gradients]
+  ig_steps: 4
+checks:
+  randomization:
+    max_groups: 3
+  shift:
+    shifts: [-10, 10]
+  invariance:
+    gains_db: [-6]
+    resample_rates: [8000]
+    codecs: [mp3]

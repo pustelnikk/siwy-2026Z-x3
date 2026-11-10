@@ -1,0 +1,36 @@
+# Pilot from the X3 card: one tagger, four methods, 50 ESC-50 clips, all five checks.
+name: pilot_ast_esc50
+seed: 0
+device: auto
+
+data:
+  dataset: esc50
+  root: data/raw/ESC-50-master
+  n_clips: 50
+  clip_seconds: 4.0
+
+model:
+  arch: ast
+  checkpoint: MIT/ast-finetuned-audioset-10-10-0.4593
+
+attribution:
+  methods: [saliency, input_x_gradient, integrated_gradients, smoothgrad]
+  batch_size: 4
+  internal_batch_size: 8   # ~0.45 GB VRAM per input on AST; keep the GPU from overflowing
+  ig_steps: 16
+  smoothgrad_samples: 16
+
+checks:
+  run: [randomization, shift, invariance, loudness, agreement]
+  normalizations: [raw, abs, abs_max]
+  measures: [spearman, pearson, ssim, topk]
+  shift:
+    shifts: [-25, -10, -3, 3, 10, 25]
+  invariance:
+    gains_db: [-12, -6, 6]
+    resample_rates: [8000, 22050]
+    codecs: [mp3, ogg]
+
+plot:
+  normalization: abs
+  measure: spearman

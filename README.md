@@ -1,119 +1,102 @@
-# SIWY - Design Proposal - 2026Z
+# audiosanity: testy poprawności map atrybucji dla klasyfikatorów audio
 
-Autorzy:
+Projekt SIWY 2026Z, X3: *Do audio explanations pass the tests that image explanations failed?*
+Autorzy: Mariusz Pakulski, Filip Misztal, Paweł Łasica.
 
-- Mariusz Pakulski
-- Filip Misztal
-- Paweł Łasica
+Pakiet uruchamia na modelu audio zestaw testów znanych z wizji komputerowej:
 
-Temat: Do audio explanations pass the tests that image explanations failed? (X3)
+| test | moduł | pytanie |
+|---|---|---|
+| model randomization | `checks/randomization.py` | czy mapa się zmienia, gdy kolejne warstwy (od wyjścia) dostają losowe wagi? |
+| time-shift equivariance | `checks/shift.py` | czy mapa przesuniętego klipu to przesunięta mapa? |
+| gain / resample / codec invariance | `checks/invariance.py` | czy mapa jest odporna na zmiany, które nie powinny zmieniać decyzji? |
+| loudness confound | `checks/loudness.py` | czy mapa po prostu odwzorowuje log-spektrogram / onsety? |
+| agreement | `checks/agreement.py` | czy różne metody wskazują to samo? |
 
+Każdy test ma wbudowaną **losową próbę kontrolną**: to samo porównanie wykonane między dwoma
+*różnymi* klipami. Każdy wynik jest raportowany dla każdej kombinacji **normalizacji** mapy
+(`raw`, `abs`, `abs_max`, `max_abs`) i **miary podobieństwa** (`spearman`, `pearson`, `ssim`, `topk`),
+bo werdykt randomizacji zależy od obu tych wyborów. Przedziały ufności są liczone metodą bootstrap.
 
-## Harmonogram
+Design proposal: [docs/design_proposal.md](docs/design_proposal.md)
 
-| Tydzień | Okres | Krótki opis | Plan |
-|---------|-------|-------|------|
-| 1 | 26.10 - 01.11 | Design proposal | Przygotowanie design proposalu (28.10 deadline). Zapoznanie się z literaturą. Określenie, które metody w wizji nie przeszły których testów. Inwentaryzacja checkpointów. Spisanie wyniku obalającego i progów zaliczenia. |
-| 2 | 02.11 - 08.11 | Prototyp | Stworzenie prototypu + spotkanie (6.11 deadline). Pilot na gotowych modelach (detektor SONICS + tagger AudioSet): 4 metody, 50 klipów, randomizacja kaskadowa z normalizacją i bez, krzywa. |
-| 3 | 09.11 - 15.11 | Fundamenty | Pobranie pozostałych checkpointów, przygotowanie danych SONICS i ESC-50, wybór 300 klipów (środki długich klipów). Interfejsy pakietu. Start testów głowic (AST, PANN, wav2vec2). |
-| 4 | 16.11 - 22.11 | Walidacja modeli i testów | Dokończenie głowic i sprawdzenie dokładności. Rozszerzenie randomizacji na nowe modele. Określenie mocy testów. Start testów audio. |
-| 5 | 23.11 - 29.11 | Testy audio | Ekwiwariancja przesunięcia, wzmocnienie, resampling, kodek, test głośności. Mapy dla wszystkich architektur. |
-| 6 | 30.11 - 06.12 | Domknięcie testów | Test zgodności, 5. metoda, meta-ewaluacja miar podobieństwa i wierności, testy jednostkowe. Zamrożenie definicji testów, start pełnej siatki. |
-| 7 | 07.12 - 13.12 | Pełna siatka | 30 par × 300 klipów, ziarna. Przygotowanie pipeline'u tabeli i wykresów. |
-| 8 | 14.12 - 20.12 | Analiza | Tabela zaliczeń i niezaliczeń z przedziałami, wrażliwość na normalizację i miarę, kolumna „czy wynik z wizji się powtarza” dla każdej pary metoda–test. Start raportu. |
-| 9 | 21.12 - 27.12 | Bufor | Ponowienie nieudanych przebiegów, szlify kodu. Święta. |
-| 10 | 28.12 - 03.01 | Wolne | Tydzień wolnego. |
-| 11 | 04.01 - 10.01 | Dokumentacja | Raport z wynikami, dokumentacja, instrukcja użytkowania, wydanie pakietu (GitHub/PyPI), filmik podsumowujący. |
-| 12 | 11.01 - 17.01 | Oddanie | Oddanie projektu (deadline 14.01). |
+## Instalacja
 
+Wymagane: [uv](https://docs.astral.sh/uv/) oraz opcjonalnie [just](https://github.com/casey/just)
+(`uv tool install rust-just`). Na Windows/Linux instalowany jest torch z CUDA 12.8; działa też bez GPU.
 
-## Bibliografia
+```bash
+uv sync                          # tworzy .venv z zależnościami (także dev: pytest, ruff)
+uv run audiosanity download esc50   # ~600 MB do data/raw/ESC-50-master
+```
 
-* Sanity Checks for Saliency Maps (arXiv:1810.03292)
-* The (Un)reliability of saliency methods (arXiv:1711.00867)
-* When Explanations Lie: Why Many Modified BP Attributions Fail (arXiv:1912.09818)
-* Investigating sanity checks for saliency maps with image and text classification (arXiv:2106.07475)
-* The Disagreement Problem in Explainable Machine Learning: A Practitioner's Perspective (arXiv:2202.01602)
-* Sanity Checks for Saliency Metrics (arXiv:1912.01451)
-* The Meta-Evaluation Problem in Explainable AI: Identifying Reliable Estimators with MetaQuantus (arXiv:2302.07265)
-* Listenable Maps for Audio Classifiers (arXiv:2403.13086)
-* A Framework for Evaluating Faithfulness in Explainable AI for Machine Anomalous Sound Detection (arXiv:2601.19017)
-* The Perceived Fragility of Explanations in Audio Models: Manipulation of Attribution with Unchanged Predictions (arXiv:2606.14466)
+## Użycie
 
-## Planowany zakres eksperymentów
+```bash
+just smoke                                   # 4 klipy, ok. 30 s na GPU: sprawdza, czy wszystko działa
+just run configs/pilot.yaml                  # pilot: AST + ESC-50, 50 klipów, 4 metody, 5 testów
+just run configs/pilot.yaml data.n_clips=10 attribution.methods=[saliency]   # nadpisanie configu
+just test                                    # testy jednostkowe (małe losowe modele, bez pobierania)
+just lint / just fmt                         # ruff
+just tb                                      # TensorBoard nad katalogiem results/
+uv run audiosanity methods                   # lista modeli, metod, testów i miar
+```
 
-Eksperymenty zostaną przeprowadzone w oparciu o siatkę badawczą obejmującą 3 odmienne architektury audio, 2 zadania, 5 metod atrybucji oraz 300 próbek testowych per konfiguracja (z wykorzystaniem próbkowania bootstrapowego i próby kontrolnej). Każda z 30 powstałych konfiguracji zostanie poddana serii 5 testów.
+Bez `just`: `uv run audiosanity run configs/pilot.yaml data.n_clips=10`.
 
+Każdy przebieg tworzy `results/<name>_<data>/`:
 
+| plik | zawartość |
+|---|---|
+| `config.yaml` | pełny rozwiązany config (można go uruchomić ponownie) |
+| `predictions.csv` | klipy, wyjaśniana klasa, wynik modelu |
+| `maps.npz` | oryginalne mapy atrybucji, `(n_clips, T, F)` per metoda |
+| `results.csv` | wszystkie porównania na poziomie klipu (format długi) |
+| `summary.csv` | średnie + 95% CI per test / metoda / warunek / normalizacja / miara |
+| `figures/<test>.png` | wykres per test (linia przerywana = próba kontrolna) |
+| `tb/` | logi TensorBoard |
 
-### Metody atrybucji
+## Struktura
 
-5 metod do wyboru z:
+```
+configs/                YAML z eksperymentami (schemat i wartości domyślne: src/audiosanity/config.py)
+src/audiosanity/
+  config.py             schemat configu (dataclasses + OmegaConf)
+  data.py               pobieranie ESC-50, wybór klipów, okna ze środka klipu
+  models/               interfejs AudioClassifier + wrappery AST i wav2vec2 (HF)
+  attribution.py        metody atrybucji (Captum) i explain(): fala -> mapa na siatce czas x częstotliwość
+  transforms.py         gain, resampling, kodek (MP3/OGG przez libsndfile, z wyrównaniem opóźnienia)
+  measures.py           normalizacje, miary podobieństwa, bootstrap
+  checks/               po jednym module na test + wspólny CheckContext
+  pipeline.py           uruchomienie eksperymentu i zapis wyników
+  plotting.py, cli.py
+tests/                  pytest, małe losowo zainicjalizowane modele
+docs/                   design proposal
+data/raw/               surowe dane, tylko do odczytu (poza gitem)
+results/                wyniki przebiegów (poza gitem)
+```
 
-* AudioLIME
-* GradCAM
-* LRP
-* Integrated Gradients
-* Listenable Map
-* Occlusion
-* Guided BackProp
-* Saliency
+### Wspólna siatka map
 
+Każdy model rzutuje atrybucję na siatkę `(T, F)` o skoku `hop_length` próbek (10 ms dla 16 kHz):
+AST ma 128 pasm mel, a model falowy (wav2vec2) ma `F = 1`, czyli sumę atrybucji próbek w ramce.
+Ramka `k` zaczyna się od próbki `k * hop_length`, więc przesunięcie audio o `k` ramek przesuwa mapę
+dokładnie o `k` ramek. Analizowane okno (`data.clip_seconds`) jest wycinane ze **środka** klipu,
+co eliminuje padding w teście przesunięcia.
 
+## Jak rozszerzać
 
-### Architektury bazowe:
-* model spektrogramowy - PANNs.
-* patch transformer - Audio Spectrogram Transformer (AST).
-* samo-nadzorowany model fali dźwiękowej - wav2vec 2.0.
+- **Nowy model**: podklasa `AudioClassifier` (`features`, `forward`, `to_grid`, `reference`,
+  `layer_groups`, `from_pretrained`) zarejestrowana w `models/__init__.py:REGISTRY`.
+  Do tego metoda `tiny()` i parametr w `tests/conftest.py`, żeby testy objęły nowy model.
+- **Nowa metoda atrybucji**: funkcja w `attribution.py` dodana do `METHODS`. Jeśli nie da się jej
+  zastosować do danej architektury, para trafia do `UNAVAILABLE` i w wynikach jest oznaczona jako
+  *unavailable* (nie jako *fail*).
+- **Nowy test**: moduł w `checks/` z `NAME` i `run(ctx) -> list[dict]`, zarejestrowany w
+  `checks/__init__.py`. Do porównań i próby kontrolnej służą `ctx.compare(...)` i `ctx.control(...)`.
 
-### Zadania/zbiory:
-* SONICS (https://www.kaggle.com/datasets/awsaf49/sonics-dataset) - detekcja syntetycznego dźwięku/muzyki.
-* ESC-50 (https://www.kaggle.com/datasets/eliasmarcon/environmental-sound-classification-50) -detekcja 50 klas zdarzeń dźwiękowych.
+## Konwencje
 
-### Zestaw testów:
-1. Model Randomization - sukcesywna randomizacja wag warstwa po warstwie, z włączoną i wyłączoną normalizacją map atrybucji.
-2. Time-Shift Equivariance - przesunięcie czasowe sygnału audio i ocena, czy mapa atrybucji przesuwa się w sposób równoważny, z uwzględnieniem obcięcia ramek w centrach długich nagrań.
-3. Gain & Codec Invariance - odporność wyjaśnień na zmianę wzmocnienia (gain) oraz kompresję stratną.
-4. Loudness Confound - pomiar korelacji mapy atrybucji ze spektrogramem amplitudy logarytmicznej oraz funkcją onset strength.
-5. Disagreement Test & Reliability Checks - ocena spójności wskazań różnych metod atrybucji na tych samych próbkach.
-
-Wynik obalający
-
-Projekt zostanie uznany za obalony na wczesnym etapie, jeśli wszystkie badane metody atrybucji przejdą każdy z testów na wszystkich trzech architekturach modeli, a ich odchylenia nie będą odbiegać od szumu losowej próby kontrolnej.
-
-## Planowana funkcjonalność programu
-
-* dobór testowanego modelu audio
-* przekształcenia audio (zgodnie z punktem Zestaw testów)
-* kalkulacja przedziałów ufności
-* wyliczenie reliablity metrics
-* osobny interfejs per test z wbudowaną losową próbą kontrolną random control i konfigurowalną normalizacją map
-* automatyczne uruchamiania całego zbioru testów weryfikacyjnych z wbudowaną losową próbą kontrolną random control i konfigurowalną normalizacją map
-* export macierzy wyników testów we wszystkich 30 konfiguracjach oraz ich porównanie z analogicznymi wynikami znanymi z wizji komputerowej, wartościami przedziałów ufności oraz reliability metrics.
-
-## Planowany stack technologiczny
-Poniższe narzędzia są propozycją i mogą być w razie potrzeby zmienione lub niewykorzystane, w zależności od potrzeb.
-
-### Język i środowisko
-- Python
-- just
-- uv 
-- pytest
-
-### Biblioteki DL
-- transformers
-- huggingface
-- torch
-
-### Biblioteki XAI/Metryki
-- captum
-- zennit
-- quantus
-- speechbrain
-
-### Biblioteki audio
-- torchaudio
-- Pydub / FFmpeg / SoundFile
-
-### Pozostałe
-- numpy / scipy
+- Formatowanie i lint: `ruff` (długość linii 110). Przed commitem: `just fmt && just test`.
+- Commity: [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, ...).
+- Konfiguracja tylko w `configs/`, bez stałych w kodzie. `data/raw` jest tylko do odczytu.
