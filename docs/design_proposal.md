@@ -14,8 +14,8 @@ Temat: Do audio explanations pass the tests that image explanations failed? (X3)
 | Tydzień | Okres | Krótki opis | Plan |
 |---------|-------|-------|------|
 | 1 | 26.10 - 01.11 | Design proposal | Przygotowanie design proposalu (28.10 deadline). Zapoznanie się z literaturą. Określenie, które metody w wizji nie przeszły których testów. Inwentaryzacja checkpointów. Spisanie wyniku obalającego i progów zaliczenia. |
-| 2 | 02.11 - 08.11 | Prototyp | Stworzenie prototypu + spotkanie (6.11 deadline). Pilot na gotowych modelach (detektor SONICS + tagger AudioSet): 4 metody, 50 klipów, randomizacja kaskadowa z normalizacją i bez, krzywa. |
-| 3 | 09.11 - 15.11 | Fundamenty | Pobranie pozostałych checkpointów, przygotowanie danych SONICS i ESC-50, wybór 300 klipów (środki długich klipów). Interfejsy pakietu. Start testów głowic (AST, PANN, wav2vec2). |
+| 2 | 02.11 - 08.11 | Prototyp | Praca nad prototypem (6.11 deadline). Odchylenie: prototyp domykany w tygodniu 3, zob. notatka z 11.11. Pilot na gotowych modelach (detektor SONICS + tagger AudioSet): 4 metody, 50 klipów, randomizacja kaskadowa z normalizacją i bez, krzywa. |
+| 3 | 09.11 - 15.11 | Fundamenty | Zakończenie prac nad prototypem. Pobranie pozostałych checkpointów, przygotowanie danych SONICS i ESC-50, wybór 300 klipów (środki długich klipów). Interfejsy pakietu. Start testów głowic (AST, PANN, wav2vec2). |
 | 4 | 16.11 - 22.11 | Walidacja modeli i testów | Dokończenie głowic i sprawdzenie dokładności. Rozszerzenie randomizacji na nowe modele. Określenie mocy testów. Start testów audio. |
 | 5 | 23.11 - 29.11 | Testy audio | Ekwiwariancja przesunięcia, wzmocnienie, resampling, kodek, test głośności. Mapy dla wszystkich architektur. |
 | 6 | 30.11 - 06.12 | Domknięcie testów | Test zgodności, 5. metoda, meta-ewaluacja miar podobieństwa i wierności, testy jednostkowe. Zamrożenie definicji testów, start pełnej siatki. |
