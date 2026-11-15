@@ -10,8 +10,9 @@ Two variants, chosen with ``checks.randomization.modes``:
 After each step the maps are recomputed (for the *original* target class) and compared with the maps of
 the trained model. A map that stays similar does not depend on the learned weights.
 
-Deviation from the paper: Adebayo et al. re-initialise weights with the layer's initialisation scheme.
-Here every parameter tensor is replaced by Gaussian noise with that tensor's own mean and standard
+Deviation from the paper: Adebayo et al. re-initialise weights from a truncated normal distribution
+(mean 0, std 0.01 for their CNN; a uniform distribution gave identical results). Here every parameter
+tensor is replaced by Gaussian noise with that tensor's own mean and standard
 deviation (``randomize_``). This needs no knowledge of how each architecture was initialised and keeps
 activations on the trained scale; it should be reported as such.
 """

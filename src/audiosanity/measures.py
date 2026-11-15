@@ -1,8 +1,9 @@
 """Map normalisations, similarity measures and bootstrap intervals.
 
-The randomization verdict is known to depend on both normalisation and similarity measure
-(Kokhlikyan et al., 2021, "Investigating sanity checks for saliency maps with image and text
-classification"), so every check reports every (normalisation, measure) combination.
+The randomization verdict depends on the normalisation and the similarity measure: Adebayo et al. (2018)
+report that gradient x input and IG stay similar under absolute-value Spearman but drop to zero under
+signed Spearman, and the X3 project card asks to report both. So every check reports every
+(normalisation, measure) combination.
 """
 
 from __future__ import annotations

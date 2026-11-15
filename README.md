@@ -18,7 +18,7 @@ Każdy test ma wbudowaną **losową próbę kontrolną**: to samo porównanie wy
 (`raw`, `abs`, `abs_max`, `max_abs`) i **miary podobieństwa** (`spearman`, `pearson`, `ssim`, `topk`),
 bo werdykt randomizacji zależy od obu tych wyborów. Przedziały ufności są liczone metodą bootstrap.
 
-Design proposal: [docs/design_proposal.md](docs/design_proposal.md)
+Design proposal: [docs/design_proposal.md](docs/design_proposal.md) · Analiza literatury: [docs/literature.md](docs/literature.md) · Notatki z postępów: [docs/notes/](docs/notes/)
 
 ## Instalacja
 

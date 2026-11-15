@@ -24,7 +24,8 @@ AttributionFn = Callable[
 # Reference input of Integrated Gradients. The verdict of input invariance depends on it
 # (Kindermans et al., 2017), so it is a config choice (``attribution.ig_baseline``):
 #   zero     - zeros in model-input space; for AST that is the dataset-mean log-mel, *not* silence
-#   silence  - the model input of an all-zero waveform, i.e. true silence through the model's own front end
+#   silence  - the model input of an all-zero waveform, i.e. true silence through the model's own front
+#              end; it moves with a constant input shift, like the "black image" baseline of Kindermans et al.
 #   mean     - per-clip mean of the model input
 BASELINES = ("zero", "silence", "mean")
 
