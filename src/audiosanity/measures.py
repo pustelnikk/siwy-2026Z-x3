@@ -1,7 +1,8 @@
 """Map normalisations, similarity measures and bootstrap intervals.
 
 The randomization verdict is known to depend on both normalisation and similarity measure
-(Binder et al., 2021), so every check reports every (normalisation, measure) combination.
+(Kokhlikyan et al., 2021, "Investigating sanity checks for saliency maps with image and text
+classification"), so every check reports every (normalisation, measure) combination.
 """
 
 from __future__ import annotations

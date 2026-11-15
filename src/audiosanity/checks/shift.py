@@ -1,4 +1,4 @@
-"""Time-shift equivariance (after Kindermans et al., 2017, adapted to audio).
+"""Time-shift equivariance (as defined in the X3 project card; no direct vision counterpart).
 
 The analysis window is moved by ``k`` grid frames inside the (longer) clip. The map of the shifted
 window, moved back by ``k`` frames, should match the original map on the overlapping part. Windows
