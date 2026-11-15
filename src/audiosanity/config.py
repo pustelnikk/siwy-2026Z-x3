@@ -42,6 +42,8 @@ class AttributionConfig:
     # Windows silently spills into system RAM and everything becomes several times slower.
     internal_batch_size: int = 8
     ig_steps: int = 16
+    # Reference input of Integrated Gradients: zero | silence | mean (see attribution.BASELINES).
+    ig_baseline: str = "zero"
     smoothgrad_samples: int = 16
     # Noise std as a fraction of the input range (Smilkov et al. use 0.1-0.2).
     smoothgrad_noise: float = 0.15
@@ -51,6 +53,9 @@ class AttributionConfig:
 class RandomizationConfig:
     # How many layer groups (counted from the output) to randomize; null = all of them.
     max_groups: int | None = None
+    # cascading:   groups randomized cumulatively from the output (Adebayo et al., 2018, Fig. 2)
+    # independent: one group at a time, all others trained (Adebayo et al., 2018, independent variant)
+    modes: list[str] = field(default_factory=lambda: ["cascading"])
 
 
 @dataclass
@@ -64,6 +69,11 @@ class InvarianceConfig:
     gains_db: list[float] = field(default_factory=lambda: [-12.0, -6.0, 6.0])
     resample_rates: list[int] = field(default_factory=lambda: [8000, 22050])
     codecs: list[str] = field(default_factory=lambda: ["mp3", "ogg"])
+    # Exact input invariance (Kindermans et al., 2017): the model input is shifted by a constant and the
+    # first layer's bias compensates it, so the model output is identical. In model-input units (AST:
+    # normalised log-mel, where a constant shift is a change of gain). Only for models that implement
+    # `input_shifted`; skipped for others.
+    input_shifts: list[float] = field(default_factory=lambda: [0.5])
 
 
 @dataclass

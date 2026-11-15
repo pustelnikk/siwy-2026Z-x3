@@ -7,9 +7,9 @@ Pakiet uruchamia na modelu audio zestaw testów znanych z wizji komputerowej:
 
 | test | moduł | pytanie |
 |---|---|---|
-| model randomization | `checks/randomization.py` | czy mapa się zmienia, gdy kolejne warstwy (od wyjścia) dostają losowe wagi? |
+| model randomization | `checks/randomization.py` | czy mapa się zmienia, gdy kolejne warstwy (od wyjścia) dostają losowe wagi? Kaskadowo lub pojedynczo (`checks.randomization.modes`) |
 | time-shift equivariance | `checks/shift.py` | czy mapa przesuniętego klipu to przesunięta mapa? |
-| gain / resample / codec invariance | `checks/invariance.py` | czy mapa jest odporna na zmiany, które nie powinny zmieniać decyzji? |
+| gain / resample / codec invariance | `checks/invariance.py` | czy mapa jest odporna na zmiany, które nie powinny zmieniać decyzji? Plus dokładny test Kindermansa: wejście przesunięte o stałą, skompensowane biasem pierwszej warstwy (`checks.invariance.input_shifts`, AST) |
 | loudness confound | `checks/loudness.py` | czy mapa po prostu odwzorowuje log-spektrogram / onsety? |
 | agreement | `checks/agreement.py` | czy różne metody wskazują to samo? |
 

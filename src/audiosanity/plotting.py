@@ -3,6 +3,7 @@
 Each check has its own panel type, because its conditions mean different things:
 
     randomization  line over the (ordered) cascade of randomized layer groups
+                   (randomization_independent: the same, one group at a time)
     shift          line over the shift in frames (numeric axis)
     invariance     dots with CI per transformation (categories, no lines between them)
     loudness       dots with CI per reference signal, next to its random control
@@ -154,6 +155,10 @@ def agreement_panel(ax, panel, colors, xlabels):
 
 PANELS = {
     "randomization": (randomization_panel, "similarity to the trained model's map (dashed: random control)"),
+    "randomization_independent": (
+        randomization_panel,
+        "one group randomized at a time, similarity to the trained model's map (dashed: random control)",
+    ),
     "shift": (shift_panel, "similarity to the shifted-back original map (dashed: random control)"),
     "invariance": (dot_panel, "similarity to the map of the unmodified clip (hollow: random control)"),
     "loudness": (dot_panel, "correlation of the map with the input (hollow: random control)"),

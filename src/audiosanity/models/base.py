@@ -24,6 +24,8 @@ class AudioClassifier(nn.Module, ABC):
     labels: list[str]
     # Multi-label taggers (e.g. AudioSet) use sigmoid scores, single-label classifiers softmax.
     multi_label: bool = False
+    # True if ``input_shifted`` is implemented (exact input-invariance check).
+    supports_input_shift: bool = False
 
     @abstractmethod
     def features(self, waves: np.ndarray) -> torch.Tensor:
@@ -44,6 +46,14 @@ class AudioClassifier(nn.Module, ABC):
     @abstractmethod
     def layer_groups(self) -> list[tuple[str, list[nn.Module]]]:
         """Layer groups ordered from the output towards the input (for cascading randomization)."""
+
+    def input_shifted(self, offset: float) -> AudioClassifier:
+        """Copy whose model input is shifted by ``offset`` and whose first layer compensates the shift.
+
+        The copy computes exactly the same function of the audio as ``self`` (Kindermans et al., 2017),
+        so an attribution method that is input invariant must give it the same map.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not support the input-shift check")
 
     @property
     def device(self) -> torch.device:

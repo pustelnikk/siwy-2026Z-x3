@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from audiosanity.attribution import METHODS, explain
-from audiosanity.checks.randomization import randomize_
+from audiosanity.checks.randomization import randomize_, randomized
 from audiosanity.config import AttributionConfig
 from audiosanity.data import center_window
 
@@ -52,3 +52,14 @@ def test_randomize_changes_only_selected_group(tiny_model):
     assert any(not torch.equal(a, b) for a, b in zip(head_before, head_after, strict=True))
     rest_after = [p for m in rest for p in m.parameters()]
     assert all(torch.equal(a, b) for a, b in zip(rest_before, rest_after, strict=True))
+
+
+def test_randomized_restores_trained_weights(tiny_model):
+    model = copy.deepcopy(tiny_model)
+    name, modules = model.layer_groups()[1]
+    before = [p.clone() for p in model.parameters()]
+    with randomized(modules, torch.Generator().manual_seed(0)):
+        inside = [p.clone() for p in model.parameters()]
+    after = list(model.parameters())
+    assert any(not torch.equal(a, b) for a, b in zip(before, inside, strict=True)), name
+    assert all(torch.equal(a, b) for a, b in zip(before, after, strict=True))

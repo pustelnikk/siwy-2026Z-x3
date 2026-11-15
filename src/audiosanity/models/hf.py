@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+
 import numpy as np
 import torch
 from torch import nn
@@ -34,10 +36,12 @@ class ASTClassifier(AudioClassifier):
     """
 
     window_length = 400
+    supports_input_shift = True
 
     def __init__(self, model: ASTForAudioClassification, extractor: ASTFeatureExtractor | None = None):
         super().__init__()
         self.model = model.eval()
+        self.input_offset = 0.0  # constant added to the model input (see input_shifted)
         self.extractor = extractor or ASTFeatureExtractor(
             num_mel_bins=model.config.num_mel_bins, max_length=model.config.max_length
         )
@@ -69,10 +73,21 @@ class ASTClassifier(AudioClassifier):
 
     def features(self, waves: np.ndarray) -> torch.Tensor:
         out = self.extractor(list(waves), sampling_rate=self.sample_rate, return_tensors="pt")
-        return out["input_values"].to(self.device)
+        return out["input_values"].to(self.device) + self.input_offset
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         return self.model(input_values=inputs).logits
+
+    def input_shifted(self, offset: float) -> ASTClassifier:
+        """The log-mel input enters only through the patch-embedding convolution (no padding), so
+        ``conv(x + c) = conv(x) + c * sum(w)`` and subtracting ``c * sum(w)`` from its bias restores
+        every activation exactly. Padded frames are shifted too, so the equivalence holds on them."""
+        shifted = copy.deepcopy(self)
+        proj = shifted.model.audio_spectrogram_transformer.embeddings.patch_embeddings.projection
+        with torch.no_grad():
+            proj.bias -= offset * proj.weight.sum(dim=(1, 2, 3))
+        shifted.input_offset = self.input_offset + offset
+        return shifted
 
     def to_grid(self, attributions: torch.Tensor, n_samples: int) -> np.ndarray:
         return attributions[:, : self.n_frames(n_samples), :].detach().float().cpu().numpy()

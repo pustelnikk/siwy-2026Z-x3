@@ -30,13 +30,18 @@ def test_end_to_end(tmp_path, monkeypatch, arch):
             "device=cpu",
             "data.clip_seconds=1.0",
             "n_bootstrap=50",
+            "checks.randomization.modes=[cascading,independent]",
+            "attribution.ig_baseline=silence",
         ],
     )
     run_dir = pipeline.run_experiment(cfg)
 
     summary = pd.read_csv(run_dir / "summary.csv")
-    assert set(summary["check"]) == set(cfg.checks.run)
-    for check in cfg.checks.run:
+    checks = set(cfg.checks.run) | {"randomization_independent"}
+    assert set(summary["check"].dropna()) == checks
+    shift_rows = summary["condition"].astype(str).str.startswith("input_shift")
+    assert shift_rows.any() == (arch == "ast")  # exact input shift only where the model supports it
+    for check in checks:
         assert (run_dir / "figures" / f"{check}.png").exists()
         assert (run_dir / "figures" / f"{check}_all.png").exists()
         conditions = summary.loc[summary["check"] == check, "condition"]
